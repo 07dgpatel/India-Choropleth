@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Leaflet</title>
+  <!-- Leaflet's CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin="" />
+  <!-- Leaflet's JS -->
+  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+    crossorigin="">
+  </script>
+  <!-- Leaflet-Provider JS  -->
+  <script src="leaflet-providers.js"></script>
+  <!-- leaflet-search JS CSS  -->
+  <link rel="stylesheet" href="leaflet-search-master/dist/leaflet-search.min.css" />
+  <script src="leaflet-search-master/dist/leaflet-search.src.js"></script>
+
+  <!-- leaflet-defaultextent js CSS   -->
+  <link rel="stylesheet" href="Leaflet.defaultextent-master/dist/leaflet.defaultextent.css" />
+  <script src="Leaflet.defaultextent-master/dist/leaflet.defaultextent.js"></script>
+  <!-- Grouped layer control -->
+  <link rel="stylesheet" href="leaflet-groupedlayercontrol-gh-pages/dist/leaflet.groupedlayercontrol.min.css" />
+  <script src="leaflet-groupedlayercontrol-gh-pages/dist/leaflet.groupedlayercontrol.min.js"></script>
+  <!-- fullscreen -->
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
+    rel='stylesheet' />
+  <!-- ZoomSlider -->
+  <script src='Leaflet.zoomslider-master/L.Control.Zoomslider.js'></script>
+  <link rel='stylesheet' href='Leaflet.zoomslider-master/L.Control.Zoomslider.css' />
+  <!-- mousePosition -->
+  <script src="Leaflet.MousePosition-master/L.Control.MousePosition.js"></script>
+  <link rel="stylesheet" href="Leaflet.MousePosition-master/L.Control.MousePosition.css" />
+</head>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    height: 100%
+  }
+
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #map {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    z-index: 0;
+  }
+
+  /* description style */
+  .info {
+    position: fixed !important;
+    right: 46%;
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+  }
+
+  .info h4 {
+    margin: 0 0 5px;
+    color: #777;
+  }
+
+  /* choropleth map legend */
+  .legend {
+    position: fixed !important;
+    right: 0 !important;
+    right: 0;
+    bottom: 0.8em;
+    line-height: 18px;
+    color: #555;
+  }
+
+  .legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+  }
+
+  /* dafault extent */
+  .leaflet-control-defaultextent {
+    position: absolute;
+    top: 5.5em;
+  }
+
+  /* fullscreen */
+  .leaflet-control-fullscreen {
+    position: fixed !important;
+    right: 0.8em !important;
+
+  }
+
+  /* Layer controler */
+  .leaflet-control-layers {
+
+    top: 3em !important;
+
+  }
+
+  .leaflet-control-layers-toggle {
+    position: relative !important;
+    width: 30px !important;
+    height: 30px !important;
+    inline-size: 30px !important;
+  }
+
+  /* Zoomslider*/
+  .leaflet-control-zoomslider {
+    border: 2px solid rgba(0, 0, 0, 0.2) !important;
+    width: 30px;
+    height: 16.2em;
+
+    background: transparent !important;
+    top: 2.2em;
+  }
+
+  .leaflet-control-zoomslider-body {
+    border: rgba(255, 255, 255, .4);
+    background: transparent;
+  }
+
+  .leaflet-control-zoomslider-knob {
+    margin-left: -0.9em !important;
+    width: 2em !important;
+    height: 2.5em !important;
+
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+  }
+
+  .leaflet-control-zoomslider-wrap {
+    background: rgba(255, 255, 255, .4);
+    height: 15.35em;
+  }
+
+  .leaflet-control-zoomslider a {
+    display: none;
+  }
+
+  .leaflet-control-mouseposition {
+    position: absolute !important;
+    bottom: 30% !important;
+    left: 55em !important;
+
+  }
+
+
+</style>
+
+<body>
+  <div id="map"></div>
+
+  <script type="text/javascript" src="India_States.js"></script>
+  <script>
+    const map = L.map('map', {}).setView([22.065, 78.35], 4);
+    // Add scale line code
+    L.control.scale({
+      imperial: false
+    }).addTo(map);
+    // Fullscreen code
+    map.addControl(new L.Control.Fullscreen());
+    // ZoomtoExtent code
+    map.addControl(new L.Control.Zoomslider({
+      zoomControl: false
+    }));
+    // layertoExtent code
+    L.control.defaultExtent().setCenter([17.30, 79.24]).setZoom(13).addTo(map);
+    // mousePosition code
+    L.control.mousePosition({
+      numDigits: 4,
+      separator: ',',
+      lngFirst: true,
+      prefix: "Longitude,Latitude"
+    }).addTo(map);
+
+
+    // // add wms Layer
+    // var webgis = L.tileLayer.wms('https://wms.qgiscloud.com/07dgpatel/Akke/wms', {
+    //   layers: 'Akkene_Palle',
+    //   format: 'image/png',
+    //   transparent: true
+    // });
+    // add geoJson layer
+    var geo = L.geoJson(India_States_ms, {
+      style: style,
+      onEachFeature: onEachFeature
+    }).addTo(map);
+
+
+    // Base Layer
+
+    var baseLayers = {
+      'OpenStreetMap': L.tileLayer.provider('OpenStreetMap.Mapnik').addTo(map),
+      'Esri NatGeoWorldMap': L.tileLayer.provider('Esri.NatGeoWorldMap'),
+      'Esri WorldTopoMap': L.tileLayer.provider('Esri.WorldTopoMap'),
+      'Esri WorldStreetMap': L.tileLayer.provider('Esri.WorldStreetMap'),
+      'Esri WorldImagery': L.tileLayer.provider('Esri.WorldImagery'),
+      'Esri WorldTerrain': L.tileLayer.provider('Esri.WorldTerrain'),
+      'Esri WorldShadedRelief': L.tileLayer.provider('Esri.WorldShadedRelief'),
+      'Esri OceanBasemap': L.tileLayer.provider('Esri.OceanBasemap'),
+      'Esri WorldGrayCanvas': L.tileLayer.provider('Esri.WorldGrayCanvas'),
+      'Thunderforest Landscape': L.tileLayer.provider('Thunderforest.Landscape'),
+      'Stamen Watercolor': L.tileLayer.provider('Stamen.Watercolor'),
+    };
+    var overlays = {
+      "Layer": {
+        "choropleth": geo,
+        // "parcel :akkene_palle": webgis
+      }
+    };
+
+
+    L.control.groupedLayers(baseLayers, overlays).addTo(map);
+
+    // control that shows state info on hover
+    var info = L.control();
+    // Discription div create
+    info.onAdd = function (map) {
+      this._div = L.DomUtil.create('div', 'info');
+      this.update();
+      return this._div;
+    };
+    // Discription update
+    info.update = function (props) {
+      this._div.innerHTML = '<h4>Discription</h4>' + (props ? '<b>' + props.State_Upda + '</b><br/>' +
+        props.MS_CV_L + '' : 'Hover over a state');
+    };
+
+
+
+    info.addTo(map);
+
+    // get color depending on value
+    function getColor(d) {
+      return d <= -2 ? '#E60000' :
+        d <= 2 ? '#FFFF19' :
+        d <= 11 ? '#00ff00' :
+        '#999999';
+    }
+
+    // get Visiblity 
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.MS_CV_L),
+        weight: 1,
+        opacity: 1,
+        color: 'Black',
+        // dashArray: '3',
+        fillOpacity: 0.5
+      };
+    }
+    // HighlightFeature
+    function highlightFeature(e) {
+      var layer = e.target;
+
+      layer.setStyle({
+        weight: 2,
+        color: '#a6cee3',
+        dashArray: '',
+        fillOpacity: 0.7
+
+      });
+
+      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+      }
+      info.update(layer.feature.properties);
+    }
+    // reset HighlightFeature
+    function resetHighlight(e) {
+      geo.resetStyle(e.target);
+      info.update();
+    }
+    // on select to zoom feature
+    function zoomToFeature(e) {
+      map.fitBounds(e.target.getBounds());
+    }
+    // on each feature event
+    function onEachFeature(feature, layer) {
+
+      layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+      });
+
+    
+    }
+      // legend code
+      var legend = L.control({
+        position: 'bottomright'
+      });
+
+      legend.onAdd = function (map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+          grades = [10, 2, -2],
+          labels = [],
+          from, to;
+
+        for (var i = 0; i < grades.length; i++) {
+          from = grades[i];
+          to = grades[i + 1];
+
+          labels.push(
+            '<i style="background:' + getColor(from) + '"></i> ' +
+            from + (to ? ' ' + '&ndash;' + ' ' + to : '+'));
+        }
+
+        div.innerHTML = labels.join('<br>');
+        return div;
+      };
+      legend.addTo(map);
+  </script>
+</body>
+
+</html>
