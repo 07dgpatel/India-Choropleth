@@ -326,7 +326,7 @@
             from + (to ? ' ' + '&ndash;' + ' ' + to : '+'));
         }
 
-        div.innerHTML = labels.join('<br>');
+        div.innerHTML = '<b>Legend</b><br><br>'+labels.join('<br>');
         return div;
       };
       legend.addTo(map);
