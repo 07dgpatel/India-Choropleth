@@ -37,6 +37,13 @@
   <!-- mousePosition -->
   <script src="Leaflet.MousePosition-master/L.Control.MousePosition.js"></script>
   <link rel="stylesheet" href="Leaflet.MousePosition-master/L.Control.MousePosition.css" />
+
+  <!-- Leaflet.Label -->
+  <script src="Leaflet.label/leaflet.label.js"></script>
+  <link rel="stylesheet" href="Leaflet.label/leaflet.label.css" />
+
+  <!-- jquery js -->
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 </head>
 <style>
   * {
@@ -55,9 +62,11 @@
   }
 
   #map {
+
     height: 100%;
     width: 100%;
-    position: absolute;
+    position: fixed;
+    top: 20px;
     z-index: 0;
   }
 
@@ -163,14 +172,83 @@
 
   }
 
+  /* tab */
+  .interactiveContainer {
 
+    position: absolute;
+    z-index: 1;
+    top: 0px;
+    width: 100%;
+    font-family: Arial, sans-serif;
+  }
+
+  .tabBar {
+    font: 14px/16px Arial, Helvetica, sans-serif;
+  }
+
+  .tabItem {
+    width: 18.12em;
+    padding: 2px 0px 2px 0px;
+    float: left;
+    border: #aaa solid 1px;
+    border-right: none;
+    cursor: pointer;
+    text-align: center;
+    font-size: 15px;
+    font-weight: normal;
+    text-transform: uppercase;
+    color: rgb(0, 0, 0);
+
+  }
+
+  .tabItem:first-child {
+    border-radius: 7px 0px 0 7px;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 2px;
+  }
+
+  .tabItem:last-child {
+    border-radius: 0px 7px 7px 0px;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 2px;
+    border-right: 1px solid #aaa;
+  }
+
+  .tabItem:hover {
+    color: #E34B4B;
+  }
+
+  .tabItem.selected {
+    color: maroon;
+    background: #eee;
+    box-shadow: inset 1px 1px 7px -2px #555;
+    color: white !important;
+    font-weight: 400;
+    border: 1px solid #E34B4B !important;
+    background: #E34B4B !important;
+    pointer-events: none;
+  }
 </style>
 
 <body>
+  <div class="interactiveContainer">
+    <div class="tabBar">
+      <!-- Edit the labels for each tab, such as "MHCV" -->
+      <div id="tab1" class="tabItem selected" >MHCV</div>
+      <div id="tab2" class="tabItem" >ILCV</div>
+      <div id="tab3" class="tabItem" >SCV_PU</div>
+      <div id="tab4" class="tabItem" >CVP_Bus</div>
+      <div id="tab5" class="tabItem" >CV</div>
+    </div>
+  </div>
   <div id="map"></div>
+
 
   <script type="text/javascript" src="India_States.js"></script>
   <script>
+    // Edit the initial colomn and number of tabs to match your GeoJSON data and tabs in index.html
+    var col = "MS_MHCV";
+    var tabs = 5;
     const map = L.map('map', {}).setView([22.065, 78.35], 4);
     // Add scale line code
     L.control.scale({
@@ -199,13 +277,22 @@
     //   format: 'image/png',
     //   transparent: true
     // });
+
     // add geoJson layer
+
     var geo = L.geoJson(India_States_ms, {
       style: style,
       onEachFeature: onEachFeature
     }).addTo(map);
 
-
+ // When a new tab is selected, this changes the year displayed
+ $(".tabItem").click(function () {
+      $(".tabItem").removeClass("selected");
+      $(this).addClass("selected");
+      col = 'MS_'+$(this).html();
+      // year = $(this).html().split("-")[1];  /* use for school years, eg 2010-11 */
+      geo.setStyle(style);
+    });
     // Base Layer
 
     var baseLayers = {
@@ -242,25 +329,24 @@
     // Discription update
     info.update = function (props) {
       this._div.innerHTML = '<h4>Discription</h4>' + (props ? '<b>' + props.State_Upda + '</b><br/>' +
-        props.MS_CV_L + '' : 'Hover over a state');
+        (checkNull((props[col])*100)) + '' : 'Hover over a state');
     };
-
-
-
     info.addTo(map);
+
+  
 
     // get color depending on value
     function getColor(d) {
       return d <= -2 ? '#E60000' :
         d <= 2 ? '#FFFF19' :
         d <= 11 ? '#00ff00' :
-        '#999999';
+        '#000000';
     }
 
     // get Visiblity 
     function style(feature) {
       return {
-        fillColor: getColor(feature.properties.MS_CV_L),
+        fillColor: getColor((feature.properties[col])*100),
         weight: 1,
         opacity: 1,
         color: 'Black',
@@ -270,6 +356,7 @@
     }
     // HighlightFeature
     function highlightFeature(e) {
+ 
       var layer = e.target;
 
       layer.setStyle({
@@ -294,42 +381,60 @@
     function zoomToFeature(e) {
       map.fitBounds(e.target.getBounds());
     }
+
     // on each feature event
     function onEachFeature(feature, layer) {
 
       layer.on({
         mouseover: highlightFeature,
         mouseout: resetHighlight,
-        click: zoomToFeature
+        click: highlightFeature
       });
+// popup on feature
+      layer.bindTooltip('<b><i>' + feature.properties.State_Upda + '</i></b><br>' +feature.properties[col]*100, {
+        permanent: true,
+        direction: 'auto'
+      });
+    }
+    // legend code
+    var legend = L.control({
+      position: 'bottomright'
+    });
+
+    legend.onAdd = function (map) {
+
+      var div = L.DomUtil.create('div', 'info legend'),
+        grades = [11, 2, -2],
+        labels = [],
+        from, to;
+
+      for (var i = 0; i < grades.length; i++) {
+        from = grades[i];
+        to = grades[i + 1];
+
+        labels.push(
+          '<i style="background:' + getColor(from) + '"></i> ' +
+          from + (to ? ' ' + '&ndash;' + ' ' + to : '+'));
+      }
+
+      div.innerHTML = '<b>Legend</b><br><br>' + labels.join('<br>');
+      return div;
+    };
+    legend.addTo(map);
 
     
+  
+    // In info.update, this checks if GeoJSON data contains a null value, and if so displays "--"
+    function checkNull(val) {
+      if (val != null || val == "NaN") {
+        return val;
+      } else {
+        return "--";
+      }
     }
-      // legend code
-      var legend = L.control({
-        position: 'bottomright'
-      });
 
-      legend.onAdd = function (map) {
 
-        var div = L.DomUtil.create('div', 'info legend'),
-          grades = [10, 2, -2],
-          labels = [],
-          from, to;
 
-        for (var i = 0; i < grades.length; i++) {
-          from = grades[i];
-          to = grades[i + 1];
-
-          labels.push(
-            '<i style="background:' + getColor(from) + '"></i> ' +
-            from + (to ? ' ' + '&ndash;' + ' ' + to : '+'));
-        }
-
-        div.innerHTML = '<b>Legend</b><br><br>'+labels.join('<br>');
-        return div;
-      };
-      legend.addTo(map);
   </script>
 </body>
 
